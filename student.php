@@ -34,9 +34,6 @@
                 <a class="nav-link" href="student.php">Home <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="tables.php">Schedule</a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="#">Features</a>
             </li>
             <li class="nav-item">
@@ -61,7 +58,7 @@
         
         <div class="form-group">
             <h2 class="text-muted">Enroll in a subject.</h2>
-            <form action="admin.php" method = "POST">
+            <form action="student.php" method = "POST">
 
                 <label class="col-form-label">Select a subject:</label>
                 <select name="stud_sched_subj" class="custom-select">
@@ -98,9 +95,11 @@
                         $query=mysqli_query($conn, $sel_sched);
 
                         while($row=mysqli_fetch_assoc($query)){
-                            $date=$row['description'];
-                            $time_start=$row['subj_id'];
-                            echo "<option value='.$subj_id.'>".$subject."</option>";
+                            $date=$row['date'];
+                            $time_start=$row['time_start'];
+                            $time_end=$row['time_end'];
+
+                            echo "<option value='.$sched_id.'>".$date." ".$time_start." ".$time_end."</option>";
                         }
                         $conn->close();
                     ?>
@@ -112,6 +111,33 @@
         </div>
     </div>
     </div>
+
+    <?php
+        //CREATE NEW RECORD
+        if(isset($_POST['enroll'])){
+            $newsched=$_POST['stud_sched_subj'];
+            $subj_inst=$_POST['subj_inst'];
+
+            // Create connection
+            $conn = new mysqli($servername, $username, $password, $dbname);
+            // Check connection
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+
+            $enroll_sql = "INSERT INTO student_schedule (stud_id, sched_id) 
+                         VALUES ('','$newsched')";
+
+            if ($conn->query($enroll_sql) === TRUE) {
+                echo "Enrolled in subject!";
+            } else {
+                echo "Error: " . $enroll_sql . "<br>" . $conn->error;
+            }
+
+            $conn->close();
+        }
+        
+        ?>
 
     <br><br>
 

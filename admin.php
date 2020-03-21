@@ -152,13 +152,13 @@
 
                 <label class="col-form-label">Days</label>
                 <select name="date" class="custom-select">
-                    <option value="m">M</option>
-                    <option value="mw">MW</option>
-                    <option value="mf">MF</option>
-                    <option value="wf">WF</option>
-                    <option value="tth">TTh</option>
-                    <option value="f">F</option>
-                    <option value="s">S</option>
+                    <option value="M">M</option>
+                    <option value="MW">MW</option>
+                    <option value="MF">MF</option>
+                    <option value="WF">WF</option>
+                    <option value="TTh">TTh</option>
+                    <option value="F">F</option>
+                    <option value="S">S</option>
                 </select>
 
                 <label class="col-form-label">Select timeslot:</label>
@@ -173,8 +173,6 @@
         </div>
     </div>
     </div>
-
-    <br>
 
     <?php
          $conn = new mysqli($servername, $username, $password, $dbname);
@@ -197,16 +195,14 @@
                          VALUES ('','$subject', '$date', '$time_start', '$time_end', '$teacher_id', '$room')";
 
             if ($conn->query($subj_sql) === TRUE) {
-                echo "New Schedule Added!";
+                echo "New Schedule Added!<br>";
             } else {
                 echo "Error: " . $subj_sql . "<br>" . $conn->error;
             }
         }
 
-       
-
         ?>
-
+        <br>
     </div>
     </body>
 

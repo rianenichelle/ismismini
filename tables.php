@@ -97,7 +97,7 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $sql = "SELECT * FROM account WHERE type='Teacher'";
+        $sql = "SELECT * FROM account WHERE type=2";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
@@ -136,7 +136,7 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $stud_sql = "SELECT * FROM account WHERE type='Student'";
+        $stud_sql = "SELECT * FROM account WHERE type=1";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
@@ -193,7 +193,7 @@
                 echo "<td>".$row["sched_id"]."</td>";
                 echo "<td>".$row["subj_id"]."</td>";
                 echo "<td>".$row["teacher_id"]."</td>";
-                echo "<td>".$row['date']." ".$row['time_start']." ".$row['time_end']."</td>";
+                echo "<td>".$row['date']." ".$row['time_start']." - ".$row['time_end']."</td>";
                 echo "<td>".$row["room"]."</td>";
                 echo "<td>".$row["quantity"]."</td>";
                 echo "</tr>";
