@@ -1,3 +1,12 @@
+<?php
+    session_start();
+
+    $servername = "localhost";
+    $username="root";
+    $password="";
+    $dbname="ismis";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -52,13 +61,11 @@
             <h2 class="text-muted">Create a new subject.</h2>
             <form action="admin.php" method = "POST">
                 <label class="col-form-label">Subject Name</label>
-                <input type="text" name="subject" class="form-control col-sm-6" required><br>
+                <input type="text" name="description" class="form-control col-sm-6" required><br>
                 
                 <label class="col-form-label">Maximum Number of Students</label>
                 <input type="number" name="max_stud" placeholder="1" class="form-control col-sm-4" required><br>
 
-                <label class="col-form-label">Number of Groups</label>
-                <input type="number" name="group_no" placeholder="1" class="form-control col-sm-4" required>
                 <br><br>
                 
                 <input type="submit" class="btn btn-primary" name ="create_subj" value="Create Subject">
@@ -69,18 +76,10 @@
     </div>
 
     <?php
-        session_start();
-
-        $servername = "localhost";
-        $username="root";
-        $password="";
-        $dbname="ismis";
-
         //CREATE NEW RECORD
         if(isset($_POST['create_subj'])){
-            $subject=$_POST['subject'];
+            $subject=$_POST['description'];
             $max_stud=$_POST['max_stud'];
-            $group_no=$_POST['group_no'];
 
             // Create connection
             $conn = new mysqli($servername, $username, $password, $dbname);
@@ -89,8 +88,8 @@
                 die("Connection failed: " . $conn->connect_error);
             }
 
-            $subj_sql = "INSERT INTO subjects (subj_id, name, max_stud, no_of_groups) 
-                    VALUES ('','$subject', '$max_stud', '$group_no')";
+            $subj_sql = "INSERT INTO subject (subj_id, description, max_stud) 
+                         VALUES ('','$subject', '$max_stud')";
 
             if ($conn->query($subj_sql) === TRUE) {
                 echo "New Subject Added!";
@@ -113,18 +112,41 @@
                 <label class="col-form-label">Select a subject:</label>
                 <select name="sched_subj" class="custom-select">
                     <?php //dynamic subjects here
-                    
-                    // foreach(subject blah blah)
-                    //     echo "<option value=".$subj_id">"One"</option>";
+                        $conn=new mysqli($servername, $username, $password, $dbname);
+                        if ($conn->connect_error) {
+                            die("Connection failed: " . $conn->connect_error);
+                        }
+                        $sel_subj="SELECT * FROM subject";  
+
+                        $query=mysqli_query($conn, $sel_subj);
+
+                        while($row=mysqli_fetch_assoc($query)){
+                            $subject=$row['description'];
+                            $subj_id=$row['subj_id'];
+                            echo "<option value='.$subj_id.'>".$subject."</option>";
+                        }
+                        $conn->close();
                         ?>
                 </select>
                 
                 <label class="col-form-label">Assign an instructor:</label>
                 <select name="sched_inst" class="custom-select">
-                    <?php //dynamic teachers here
-                    
-                    // foreach(subject blah blah)
-                    //     echo "<option value=".$subj_id">"One"</option>";
+                <?php //dynamic teachers here
+                        $conn=new mysqli($servername, $username, $password, $dbname);
+                        if ($conn->connect_error) {
+                            die("Connection failed: " . $conn->connect_error);
+                        }
+                        $sel_inst="SELECT * FROM account WHERE type='Teacher'";  
+
+                        $query=mysqli_query($conn, $sel_inst);
+
+                        while($row=mysqli_fetch_assoc($query)){
+                            $inst_fname=$row['fname'];
+                            $inst_lname=$row['lname'];
+                            $inst_id=$row['account_id'];
+                            echo "<option value='.$inst_id.'>".$inst_fname." ".$inst_lname."</option>";
+                        }
+                        $conn->close();
                         ?>
                 </select>
 
@@ -140,8 +162,11 @@
                 </select>
 
                 <label class="col-form-label">Select timeslot:</label>
-                <input type="time" name="start"class="form-control form-control-sm col-sm-4" required> to
-                <input type="time" name="end" class="form-control form-control-sm col-sm-4" required><br>
+                <input type="time" name="time_start"class="form-control form-control-sm col-sm-4" required> to
+                <input type="time" name="time_end" class="form-control form-control-sm col-sm-4" required><br>
+                
+                <label class="col-form-label">Room:</label>
+                <input type="text" name="room" class="form-control col-sm-4"><br>
 
                 <input type="submit" class="btn btn-primary" name ="create_sched" value="Create Schedule">
             </form>
@@ -152,39 +177,34 @@
     <br>
 
     <?php
-        // $servername = "localhost";
-        // $username = "root";
-        // $password = "";
-        // $dbname = "accounts";
+         $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        } 
+        if(isset($_POST['create_sched'])){
+            $subject=$_POST['sched_subj'];
+            $date=$_POST['date'];
+            $time_start=$_POST['time_start'];
+            $time_end=$_POST['time_end'];
+            $teacher_id=$_POST['sched_inst'];
+            $room=$_POST['room'];
+            
+            // $subj_q="SELECT max_stud FROM subject WHERE subj_id=$subject";
+            // $quantity = $conn->query($subj_q);
 
-        // $conn = new mysqli($servername, $username, $password, $dbname);
-        // // Check connection
-        // if ($conn->connect_error) {
-        //     die("Connection failed: " . $conn->connect_error);
-        // } 
+            $subj_sql = "INSERT INTO teacher_schedule (sched_id, subj_id, date, time_start, time_end, teacher_id, room) 
+                         VALUES ('','$subject', '$date', '$time_start', '$time_end', '$teacher_id', '$room')";
 
-        // $id = $_POST["iddel"];
-        // $sql = "SELECT id, fname, lname, email, pw, addr FROM profiles WHERE id=$id";
-        // $result = $conn->query($sql);
+            if ($conn->query($subj_sql) === TRUE) {
+                echo "New Schedule Added!";
+            } else {
+                echo "Error: " . $subj_sql . "<br>" . $conn->error;
+            }
+        }
 
-        // if ($result->num_rows > 0) {
-        //     $sql = "SELECT id, fname, lname, email, pw, addr FROM profiles WHERE id=$id";
-        //     $result = $conn->query($sql);
+       
 
-        //     $id = $_POST["iddel"];
-        //     // sql to delete a record
-        //     $sql = "DELETE FROM profiles WHERE id=$id";
-
-        //     if ($conn->query($sql) === TRUE) {
-        //         echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='register.php';</script>";
-        //     } else {
-        //         echo "Error deleting record: " . $conn->error;
-        //     }
-        // } else {
-        //     echo "No record found!";
-        // }
-
-        // $conn->close();
         ?>
 
     </div>

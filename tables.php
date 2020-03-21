@@ -62,7 +62,7 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $subj_query="SELECT * FROM subjects";
+        $subj_query="SELECT * FROM subject";
         $result = $conn->query($subj_query);
 
         if ($result->num_rows > 0) {
@@ -71,16 +71,14 @@
             echo '<th scope="col">ID</th>';
             echo '<th scope="col">Course Name</th>';
             echo '<th scope="col">Max Students</th>';
-            echo '<th scope="col">No. of Groups</th>';
             echo "</tr>";
             
             // output data of each row
             while($row = $result->fetch_assoc()) {
                 echo "<tr>";
                 echo "<td>".$row["subj_id"]."</td>";
-                echo "<td>".$row["name"]."</td>";
+                echo "<td>".$row["description"]."</td>";
                 echo "<td>".$row["max_stud"]."</td>";
-                echo "<td>".$row["group_no"]."</td>";
                 echo "</tr>";
             }
         }
@@ -99,12 +97,12 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $sql = "SELECT fac_id, fname, lname, email, password FROM faculty";
+        $sql = "SELECT * FROM account WHERE type='Teacher'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
             echo '<table class="table table-hover" >';
-            echo "<tr>";
+            echo "<tr class='table-active'>";
             echo '<th scope="col">ID</th>';
             echo '<th scope="col">First Name</th>';
             echo '<th scope="col">Last Name</th>';
@@ -114,7 +112,7 @@
             // output data of each row
             while($row = $result->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>".$row["fac_id"]."</td>";
+                echo "<td>".$row["account_id"]."</td>";
                 echo "<td>".$row["fname"]."</td>";
                 echo "<td>".$row["lname"]."</td>";
                 echo "<td>".$row["email"]."</td>";
@@ -138,12 +136,12 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $stud_sql = "SELECT * FROM student";
+        $stud_sql = "SELECT * FROM account WHERE type='Student'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
             echo '<table class="table table-hover" >';
-            echo "<tr>";
+            echo "<tr class='table-active'>";
             echo '<th scope="col">ID</th>';
             echo '<th scope="col">First Name</th>';
             echo '<th scope="col">Last Name</th>';
@@ -153,7 +151,7 @@
             // output data of each row
             while($row = $result->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>".$row["stud_id"]."</td>";
+                echo "<td>".$row["account_id"]."</td>";
                 echo "<td>".$row["fname"]."</td>";
                 echo "<td>".$row["lname"]."</td>";
                 echo "<td>".$row["email"]."</td>";
@@ -175,19 +173,17 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $sched_sql = "SELECT * FROM schedule 
-                       INNER JOIN faculty ON schedule.sched_id=faculty.fac_id
-                       WHERE sched_id='$sched_id'";
-        $result = $conn->query($sql);
+        $sched_sql = "SELECT * FROM teacher_schedule";
+        $result = $conn->query($sched_sql);
 
         if ($result->num_rows > 0) {
-            echo '<table class="table table-hover" >';
-            echo "<tr>";
+            echo '<table class="table table-hover">';
+            echo "<tr class='table-active'>";
             echo '<th scope="col">ID</th>';
             echo '<th scope="col">Course</th>';
             echo '<th scope="col">Instructor</th>';
             echo '<th scope="col">Schedule</th>';
-            echo '<th scope="col">Group Number</th>';
+            echo '<th scope="col">Room</th>';
             echo '<th scope="col">No. of Students</th>';
             echo "</tr>";
             
@@ -195,10 +191,11 @@
             while($row = $result->fetch_assoc()) {
                 echo "<tr>";
                 echo "<td>".$row["sched_id"]."</td>";
-                echo "<td>".$row["sched_inst"]."</td>";
-                echo "<td>".$row["date"]. $row["start"]. $row["end"]."</td>";
-                echo "<td>".$row["group_no"]."</td>";
-                echo "<td>".$row["no_of_studs"]."</td>";
+                echo "<td>".$row["subj_id"]."</td>";
+                echo "<td>".$row["teacher_id"]."</td>";
+                echo "<td>".$row['date']." ".$row['time_start']." ".$row['time_end']."</td>";
+                echo "<td>".$row["room"]."</td>";
+                echo "<td>".$row["quantity"]."</td>";
                 echo "</tr>";
             }
         }
@@ -212,7 +209,8 @@
             <h2>Remove a subject.</h2>
                 <form action="tables.php" method="POST">
                     <label class="col-form-label">Enter ID: </label>
-                    <input type="text" name="iddel" id ="iddel" class="form-control form-control-sm col-sm-2"><br>
+                    <input type="text" name="del" class="form-control form-control-sm col-sm-2"><br>
+                    
                     <input type="submit" name="del_subj" class="btn btn-primary" value="Delete">
                 </form>
 
@@ -228,19 +226,22 @@
                     // Check connection
                     if ($conn->connect_error) {
                         die("Connection failed: " . $conn->connect_error);
-                    } 
-
-                    if(isset($_POST["del_subj"])){
-                        $id=$_POST["iddel"];
                     }
                     
-                    $subj_sql = "SELECT * FROM subjects WHERE subj_id=$id";
+                    if (isset($_POST['del_subj'])){
+                        $id=$_POST["del"];
+                    }
+                    
+                    $subj_sql = "SELECT * FROM subject WHERE subj_id=$id";
                     $result = $conn->query($subj_sql);
 
                     if ($result->num_rows > 0) {   
                          // sql to delete a record
-                        $sql = "DELETE FROM profiles WHERE subj_id=$id";
-
+                         if (isset($_POST['del_subj'])){
+                            $id=$_POST["del"];
+                        }
+                        $sql = "DELETE FROM subject WHERE subj_id=$id";
+                        $result = $conn->query($sql);
                         if ($conn->query($sql) === TRUE) {
                             echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='register.php';</script>";
                         } else {

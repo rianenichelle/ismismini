@@ -1,3 +1,12 @@
+<?php
+    session_start();
+
+    $servername = "localhost";
+    $username="root";
+    $password="";
+    $dbname="ismis";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>

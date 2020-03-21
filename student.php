@@ -1,3 +1,12 @@
+<?php
+    session_start();
+
+    $servername = "localhost";
+    $username="root";
+    $password="";
+    $dbname="ismis";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -58,17 +67,42 @@
                 <select name="stud_sched_subj" class="custom-select">
                     <?php //dynamic subjects here
                     
-                    // foreach(subject blah blah)
-                    //     echo "<option value=".$subj_id">"One"</option>";
+                    $conn=new mysqli($servername, $username, $password, $dbname);
+                        if ($conn->connect_error) {
+                            die("Connection failed: " . $conn->connect_error);
+                        }
+                        $sel_subj="SELECT * FROM subject";  
+
+                        $query=mysqli_query($conn, $sel_subj);
+
+                        while($row=mysqli_fetch_assoc($query)){
+                            $subject=$row['description'];
+                            $subj_id=$row['subj_id'];
+                            echo "<option value='.$subj_id.'>".$subject."</option>";
+                        }
+
+                        $conn->close();
                         ?>
                 </select>
                 
                 <label class="col-form-label">Select a class schedule:</label>
                 <select name="subj_inst" class="custom-select">
-                    <?php //dynamic subjects here
+                    <?php //dynamic schedules here
                     
-                    // foreach(subject blah blah)
-                    //     echo "<option value=".$subj_id">""</option>";
+                    $conn=new mysqli($servername, $username, $password, $dbname);
+                        if ($conn->connect_error) {
+                            die("Connection failed: " . $conn->connect_error);
+                        }
+                        $sel_sched="SELECT * FROM teacher_schedule";  
+
+                        $query=mysqli_query($conn, $sel_sched);
+
+                        while($row=mysqli_fetch_assoc($query)){
+                            $date=$row['description'];
+                            $time_start=$row['subj_id'];
+                            echo "<option value='.$subj_id.'>".$subject."</option>";
+                        }
+                        $conn->close();
                     ?>
                 </select>
 
@@ -85,13 +119,6 @@
 
         <?php
         //DISPLAY CLASS SCHEDULE
-        session_start();
-
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
-        $dbname = "ismis";
-        
         $conn = mysqli_connect($servername, $username, $password, $dbname);
         
             // Check connection
@@ -100,11 +127,10 @@
             }
 
             //$sql = "SELECT sched_id, sched_fac_id, datetime, course_name, course_group FROM schedules";
-            $scheds_query=mysqli_query($conn,"SELECT * FROM schedules 
-                INNER JOIN order_details ON orders.order_id=order_details.order_id
-                INNER JOIN customers ON orders.customer_id=customers.customer_id
-                INNER JOIN products ON order_details.product_id
-                WHERE shipper_id='$shipper_id';") 
+            $scheds_query=mysqli_query($conn,"SELECT * FROM student_schedule 
+                INNER JOIN teacher_schedule ON student_schedule.sched_id=teacher_schedule.sched_id
+                INNER JOIN account ON student_schedule.sched_id=teacher_schedule.teacher_id
+                WHERE stud_id='$stud_id';") 
             or die("Error: " . mysqli_error($conn));
 
             // $result = $conn->query($sql);

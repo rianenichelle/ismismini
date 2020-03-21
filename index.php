@@ -56,7 +56,7 @@
 							Not a member?
 						</span>
 
-						<a class="txt1 bo1 hov1" href="#">
+						<a class="txt1 bo1 hov1" href="register.php">
 							Sign up now							
 						</a>
 					</div>
@@ -65,6 +65,39 @@
 		</div>
 	</div>
 	
+	<?php
+	   sessions_start();
+	   $email = $_POST['email'];
+	   $password = $_POST['password'];
+	   
+	   if(isset($_POST['login'])){
+		   $conn = new mysqli("localhost","root","","ismis");
+           
+	       if($conn->connect_error) {
+              die("Connection failed: " . $conn->connect_error);
+		    }  
+
+		   $sql ="SELECT * FROM account WHERE email = $email";
+
+		   $query = mysqli_query($conn,$sql);
+
+		   while($row = mysqli_fetch_array($query)){
+			   if($row["password"] == $password){
+				    header("Location:admin.php");
+				   if($row["type"] == "Admin"){
+					   echo "<script language='javascript'>alert('Successfully Logged In!');window.location.href='index.php';</script>";
+					   header("Location:admin.php");
+				    }else if($row["type"] == "Student"){
+					    echo "<script language='javascript'>alert('Successfully Logged In!');window.location.href='index.php';</script>";
+					    header("Location:student.php");
+				    }else if($row["type"] == "Teacher"){
+					    echo "<script language='javascript'>alert('Successfully Logged In!');window.location.href='index.php';</script>";
+					    header("Location:department.php");
+				    }
+			    }
+		    }
+	    }
+	?>
 	
 
 	
