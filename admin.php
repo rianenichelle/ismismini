@@ -21,7 +21,7 @@
     </head>
     <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="#">Mini ISMIS.</a>
+        <a class="navbar-brand" href="admin.php">Mini ISMIS.</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -37,13 +37,19 @@
             <li class="nav-item">
                 <a class="nav-link" href="#">Features</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">About</a>
-            </li>
+      
             </ul>
-            <form class="form-inline my-2 my-lg-0">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search">
-            <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            <form method="POST" class="form-inline my-2 my-lg-0">
+            <button class="btn btn-secondary my-2 my-sm-0" type="submit" name="logout">Logout</button>
+            <?php
+                if(isset($_POST['logout'])){
+                    session_start();
+                    session_unset();
+                    session_destroy();
+
+                    header("Location:index.php");
+                }
+            ?>
             </form>
         </div>
         </nav>
@@ -102,8 +108,95 @@
         
         ?>
     <br><br>
-    <!--NEW SCHEDULE-->
+
+
+    <!--ENROLL A STUDENT-->
     <div class="list-group-item flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+        
+        <div class="form-group">
+            <h2 class="text-muted">Enroll a new student.</h2>
+            <form action="admin.php" method = "POST">
+            <label class="col-form-label">Select a student:</label>
+                <select name="stud_acc" class="custom-select">
+                    <?php //dynamic subjects here
+                        $conn=new mysqli($servername, $username, $password, $dbname);
+                        if ($conn->connect_error) {
+                            die("Connection failed: " . $conn->connect_error);
+                        }
+                        $sel_subj="SELECT * FROM account WHERE type='Student'";  
+
+                        $query=mysqli_query($conn, $sel_subj);
+
+                        while($row=mysqli_fetch_assoc($query)){
+                            $fname=$row['fname'];
+                            $lname=$row['lname'];
+                            $stud_id=$row['account_id'];
+                            echo "<option value='.$stud_id.'>".$fname." ".$lname."</option>";
+                        }
+                        $conn->close();
+                        ?>
+                </select>
+                
+                <label class="col-form-label">Select a subject & schedule:</label>
+                <select name="subj_sched" class="custom-select">
+                <?php //dynamic teachers here
+                    $conn=new mysqli($servername, $username, $password, $dbname);
+                    if ($conn->connect_error) {
+                        die("Connection failed: " . $conn->connect_error);
+                    }
+
+                     $sel_sched="SELECT * FROM teacher_schedule 
+                                INNER JOIN subject ON teacher_schedule.subj_id=subject.subj_id";  
+
+                    $query=mysqli_query($conn, $sel_sched);
+
+                    while($row=mysqli_fetch_assoc($query)){
+                        $sched_id=$row['sched_id'];
+                        $subject=$row['description'];
+                        $date=$row['date'];
+                        $time_start=$row['time_start'];
+                        $time_end=$row['time_end'];
+                        echo "<option value='.$sched_id.'>".$subject." [".$date." ".$time_start." - ".$time_end."]</option>";
+                    }
+                     
+                    $conn->close();
+                    ?>
+                </select>
+
+                <br><br>
+
+                <input type="submit" class="btn btn-primary" name ="enroll_stud" value="Enroll Student">
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <br>
+
+    <?php
+         $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        } 
+        if(isset($_POST['enroll_stud'])){
+            $sched_id=$_POST['subj_sched'];
+            $account_id=$_POST['stud_acc'];
+            
+            $subj_sql = "INSERT INTO student_schedule (stud_id, sched_id, account_id) 
+                         VALUES ('','$sched_id', '$account_id')";
+
+            if ($conn->query($subj_sql) === TRUE) {
+                echo "Student Enrolled to a Schedule!<br><br>";
+            } else {
+                echo "Error: " . $subj_sql . "<br>" . $conn->error;
+            }
+        }
+    ?>
+
+        <!--NEW SCHEDULE-->
+        <div class="list-group-item flex-column align-items-start">
         <div class="d-flex w-100 justify-content-between">
         
         <div class="form-group">
@@ -174,6 +267,8 @@
     </div>
     </div>
 
+    <br>
+
     <?php
          $conn = new mysqli($servername, $username, $password, $dbname);
         // Check connection
@@ -188,9 +283,6 @@
             $teacher_id=$_POST['sched_inst'];
             $room=$_POST['room'];
             
-            // $subj_q="SELECT max_stud FROM subject WHERE subj_id=$subject";
-            // $quantity = $conn->query($subj_q);
-
             $subj_sql = "INSERT INTO teacher_schedule (sched_id, subj_id, date, time_start, time_end, teacher_id, room) 
                          VALUES ('','$subject', '$date', '$time_start', '$time_end', '$teacher_id', '$room')";
 
@@ -201,9 +293,8 @@
             }
         }
 
-        ?>
-        <br>
+    ?>
+
     </div>
     </body>
-
 </html>  

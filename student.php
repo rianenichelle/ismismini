@@ -5,6 +5,7 @@
     $username="root";
     $password="";
     $dbname="ismis";
+    $account_id = $_SESSION['account_id'];
 ?>
 
 <!DOCTYPE html>
@@ -34,15 +35,20 @@
                 <a class="nav-link" href="student.php">Home <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Features</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">About</a>
+                <a class="nav-link" href="stud_schedule.php">Schedule</a>
             </li>
             </ul>
-            <form class="form-inline my-2 my-lg-0">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search">
-            <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            <form method="POST" class="form-inline my-2 my-lg-0">
+            <button class="btn btn-secondary my-2 my-sm-0" type="submit" name="logout">Logout</button>
+            <?php
+                if(isset($_POST['logout'])){
+                    session_start();
+                    session_unset();
+                    session_destroy();
+
+                    header("Location:index.php");
+                }
+            ?>
             </form>
         </div>
         </nav>
@@ -55,153 +61,230 @@
     <!--NEW SUBJECT-->
     <div class="list-group-item flex-column align-items-start">
         <div class="d-flex w-100 justify-content-between">
-        
-        <div class="form-group">
+            <div class="form-group">
             <h2 class="text-muted">Enroll in a subject.</h2>
-            <form action="student.php" method = "POST">
-
-                <label class="col-form-label">Select a subject:</label>
-                <select name="stud_sched_subj" class="custom-select">
-                    <?php //dynamic subjects here
-                    
-                    $conn=new mysqli($servername, $username, $password, $dbname);
-                        if ($conn->connect_error) {
-                            die("Connection failed: " . $conn->connect_error);
-                        }
-                        $sel_subj="SELECT * FROM subject";  
-
-                        $query=mysqli_query($conn, $sel_subj);
-
-                        while($row=mysqli_fetch_assoc($query)){
-                            $subject=$row['description'];
-                            $subj_id=$row['subj_id'];
-                            echo "<option value='.$subj_id.'>".$subject."</option>";
-                        }
-
-                        $conn->close();
-                        ?>
-                </select>
-                
-                <label class="col-form-label">Select a class schedule:</label>
-                <select name="subj_inst" class="custom-select">
-                    <?php //dynamic schedules here
-                    
-                    $conn=new mysqli($servername, $username, $password, $dbname);
-                        if ($conn->connect_error) {
-                            die("Connection failed: " . $conn->connect_error);
-                        }
-                        $sel_sched="SELECT * FROM teacher_schedule";  
-
-                        $query=mysqli_query($conn, $sel_sched);
-
-                        while($row=mysqli_fetch_assoc($query)){
-                            $date=$row['date'];
-                            $time_start=$row['time_start'];
-                            $time_end=$row['time_end'];
-
-                            echo "<option value='.$sched_id.'>".$date." ".$time_start." ".$time_end."</option>";
-                        }
-                        $conn->close();
-                    ?>
-                </select>
-
-                <br><br>
-                <input type="submit" class="btn btn-primary" name ="enroll" value="Enroll">
-            </form>
-        </div>
-    </div>
-    </div>
-
-    <?php
-        //CREATE NEW RECORD
-        if(isset($_POST['enroll'])){
-            $newsched=$_POST['stud_sched_subj'];
-            $subj_inst=$_POST['subj_inst'];
-
+            <form action="student.php" method="POST">
+            <?php
             // Create connection
             $conn = new mysqli($servername, $username, $password, $dbname);
             // Check connection
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+            $sched_sql = "SELECT * FROM teacher_schedule 
+                          INNER JOIN subject ON teacher_schedule.subj_id=subject.subj_id";
+            $result = $conn->query($sched_sql);
 
-            $enroll_sql = "INSERT INTO student_schedule (stud_id, sched_id) 
-                         VALUES ('','$newsched')";
+            if($result->num_rows > 0) {
+                echo '<table class="table table-hover">';
+                echo "<tr class='table-active'>";
+                echo '<th scope="col">ID</th>';
+                echo '<th scope="col">Course Name</th>';
+                echo '<th scope="col">Instructor</th>';
+                echo '<th scope="col">Schedule</th>';
+                echo '<th scope="col">Room</th>';
+                echo '<th scope="col">No. of Students</th>';
+                echo "</tr>";
+            
+                // output data of each row
+                while($row = $result->fetch_assoc()) {
+                    $t_id = $row['teacher_id'];
+                    echo "<tr>";
+                    echo "<td>".$row["sched_id"]."</td>";
+                    echo "<td>".$row["description"]."</td>";
+                    $sql2  = "SELECT * FROM account WHERE account_id = '$t_id'";
+                    $result2 = $conn->query($sql2);
+                    while($row2 = $result2->fetch_assoc()){
+                        echo "<td>".$row2['lname']. ", ".$row2['fname']."</td>";
+                    }
+                    echo "<td>".$row['date']." ".$row['time_start']." - ".$row['time_end']."</td>";
+                    echo "<td>".$row["room"]."</td>";
+                    echo "<td>".$row["quantity"]."</td>";
+                    echo "</tr>";
+                }
+            }     
+            echo "</table>";
+            $conn->close();
+        ?>
+        <label style="color: #000">Enter Schedule ID: </label>
+        <input type="text" name = "enroll_id" class="form-control form-control-sm col-sm-2"><br>
+        <input type="submit" class="btn btn-primary" name ="enroll" value="ENROLL">
+    </form>
+    </div>
+    </div>
+    </div>
 
-            if ($conn->query($enroll_sql) === TRUE) {
-                echo "Enrolled in subject!";
-            } else {
-                echo "Error: " . $enroll_sql . "<br>" . $conn->error;
+    <?php
+        if(isset($_POST['enroll'])){
+            $enroll_id = $_POST['enroll_id'];
+
+            $conn = mysqli_connect($servername, $username, $password,$dbname);
+
+            if (!$conn) {
+                die("Connection failed: " . mysqli_connect_error());
             }
 
-            $conn->close();
+            $sql = "SELECT * FROM teacher_schedule WHERE sched_id = '$enroll_id' ";
+            $query = mysqli_query($conn,$sql);
+
+            if(mysqli_num_rows($query) > 0){
+                while($row = mysqli_fetch_array($query)){ //getting content of TEACHER schedule database that we want to get
+                    $subj_id = $row['subj_id'];
+                    $quantity = $row['quantity'];
+
+                    $sql2 = "SELECT * FROM subject WHERE subj_id = '$subj_id' ";//getting contents of SUBJECT database for maximum quantity
+                    $query2 = mysqli_query($conn,$sql2);
+
+                        if(mysqli_num_rows($query2) > 0){
+                            while($row2 = mysqli_fetch_array($query2)){ 
+                                if($quantity < $row2['max_stud']){
+                                    $sql3 = "SELECT * FROM student_schedule INNER JOIN teacher_schedule ON student_schedule.sched_id = teacher_schedule.sched_id"; //getting the student schedule whether or not it is empty
+                                    $query3 = mysqli_query($conn,$sql3);
+                                    $res = 0;
+
+                                    if(mysqli_num_rows($query3)>0){
+                                        while($row3 = mysqli_fetch_array($query3) && $res != 1 ){
+                                            if($row['time_start'] > $row3['time_end']){
+                                                    $enroll_sql = "INSERT INTO student_schedule(stud_id, sched_id, account_id) VALUES('','$enroll_id','$account_id')";                                                        
+                                                    $quantity = $quantity + 1;
+                                                    if (mysqli_query($conn,$enroll_sql) === TRUE) {
+                                                        echo "Successfully Enrolled in a Subject";
+                                                            
+                                                        $update_sql = "UPDATE teacher_schedule SET quantity = '$quantity' WHERE sched_id = '$enroll_id'";
+                                                        $update = mysqli_query($conn,$update_sql);
+                                                        header("Location:student.php");
+                                                        $res = 1;
+                                                    }else {
+                                                        $res = 0;
+                                                        echo "Error: " . $subj_sql . "<br>" .  mysqli_error($conn);
+                                                    }
+                                                }
+                                                break;
+                                        }
+                                    }else{
+                                        $enroll_sql = "INSERT INTO student_schedule (stud_id,sched_id,account_id) 
+                                                       VALUES('','$enroll_id','$account_id')";
+                                        
+                                        $quantity = $quantity + 1;
+
+                                        if (mysqli_query($conn,$enroll_sql) === TRUE ) {
+                                            echo "Successfully Enrolled in a Subject";
+                                            
+                                            $update_sql = "UPDATE teacher_schedule SET quantity = $quantity WHERE sched_id = $enroll_id";
+                                            $update = mysqli_query($conn,$update_sql);
+                                            header("Location:student.php");
+
+                                        }else {
+                                            echo "Error: " . $enroll_sql . "<br>" .  mysqli_error($conn);
+                                        }
+                                    }
+                                }
+                            }
+                        }else{
+                            echo "<h3>NOT ENROLLED IN ANY SCHEDULE</h3>";
+                        }
+                }
+            }
+           $conn->close();
         }
-        
-        ?>
+
+    ?>
 
     <br><br>
 
-    <h1>Class Schedule</h1>
+    
+    <?php
+        $conn = mysqli_connect($servername, $username, $password,$dbname);
 
-        <?php
-        //DISPLAY CLASS SCHEDULE
-        $conn = mysqli_connect($servername, $username, $password, $dbname);
-        
-            // Check connection
-            if ($conn->connect_error) {
-                die("Connection failed: " . $conn->connect_error);
+        if (!$conn) {
+            die("Connection failed: " . mysqli_connect_error());
+        }
+
+        $sql = "SELECT * FROM student_schedule 
+                INNER JOIN teacher_schedule ON student_schedule.sched_id = teacher_schedule.sched_id
+                INNER JOIN subject ON teacher_schedule.subj_id = subject.subj_id 
+                WHERE account_id = '$account_id'"; 
+                //getting the student schedule whether or not it is empty
+        $query = mysqli_query($conn,$sql);
+
+        if(mysqli_num_rows($query) > 0){
+            echo '<table class="table table-hover">';
+            echo "<tr class='table-active'>";
+            echo '<th scope="col">ID</th>';
+            echo '<th scope="col">Course Name</th>';
+            echo '<th scope="col">Instructor</th>';
+            echo '<th scope="col">Schedule</th>';
+            echo '<th scope="col">Room</th>';
+            echo "</tr>";
+            while($row = mysqli_fetch_array($query)){
+                $teacher_id = $row['teacher_id'];
+                echo "<tr>";
+                echo "<td>".$row["sched_id"]."</td>";
+                echo "<td>".$row["description"]."</td>";
+                $sql2  = "SELECT * FROM account WHERE account_id = '$teacher_id'";
+                $result2 = $conn->query($sql2);
+                while($row2 = $result2->fetch_assoc()){
+                    echo "<td>".$row2['lname']. ", ".$row2['fname']."</td>";
+                }
+                echo "<td>".$row['date']." ".$row['time_start']." - ".$row['time_end']."</td>";
+                echo "<td>".$row["room"]."</td>";
+                echo "</tr>";
             }
+        }
+        mysqli_close($conn);
 
-            //$sql = "SELECT sched_id, sched_fac_id, datetime, course_name, course_group FROM schedules";
-            $scheds_query=mysqli_query($conn,"SELECT * FROM student_schedule 
-                INNER JOIN teacher_schedule ON student_schedule.sched_id=teacher_schedule.sched_id
-                INNER JOIN account ON student_schedule.sched_id=teacher_schedule.teacher_id
-                WHERE stud_id='$stud_id';") 
-            or die("Error: " . mysqli_error($conn));
-
-            // $result = $conn->query($sql);
-
-            // if ($result->num_rows > 0) {
-            //     echo '<table class="table table-hover" >';
-            //     echo "<tr>";
-            //     echo '<th scope="col">Class Code</th>';
-            //     echo '<th scope="col">Course</th>';
-            //     echo '<th scope="col">Instructor</th>';
-            //     echo '<th scope="col">Schedule</th>';
-            //     echo "</tr>";
-                
-            //     // output data of each row
-            //     while($row = $result->fetch_assoc()) {
-            //         echo "<tr>";
-            //         echo "<td>".$row["id"]."</td>";
-            //         echo "<td>".$row["subject"]."</td>";
-            //         echo "<td>".$row["inst"]."</td>";
-            //         echo "<td>".$row["day"] $row["time"]."</td>";
-            //        
-            //         echo "</tr>";
-            //     }
-            // }
-            // echo "</table>";
-            // $conn->close();
-        ?>
-
+    ?>
     <br>
 
     <div class="row">
     <div class="list-group-item flex-column align-items-start col-sm-6">
         <div class="w-100 justify-content-between">
         <h2>Remove an enrolled subject.</h2><br>
-                <form action="delete.php" method="post">
-                    <label style="color: #000">Enter ID: </label>
-                    <input type="text" name = "iddel" id = "iddel" class="form-control form-control-sm col-sm-2"><br>
-                    <input type="submit" class="btn btn-primary" value="DELETE">
+            <form action="student.php" method="post">
+                    <label style="color: #000">Enter Course ID: </label>
+                    <input type="text" name ="delete" id = "iddel" class="form-control form-control-sm col-sm-2"><br>
+                    <input type="submit" class="btn btn-primary" name ="del_subj" value="DELETE">
             </form>
         </div>
-    </div><br>
-
     </div>
-
+    </div>
     <br><br>
+    
+    <?php
+        $conn = mysqli_connect($servername, $username, $password,$dbname);
 
+        if (!$conn) {
+            die("Connection failed: " . mysqli_connect_error());
+        }
+
+        if(isset($_POST['del_subj'])){
+            $delete_id = $_POST['delete'];
+            
+            $sql = "SELECT * FROM student_schedule WHERE stud_id = '$delete_id'";
+            $query = mysqli_query($conn,$sql);
+            if($query->num_rows>0){
+                $row=$query->fetch_assoc();
+                $id=$row['sched_id'];
+                $quantity=$row['quantity'];
+            }
+            
+            $quantity2=$quantity-1;
+
+            $del_sql = "DELETE FROM student_schedule WHERE sched_id = '$delete_id'";
+            if (mysqli_query($conn,$del_sql) === TRUE) {
+                $update_sql = "UPDATE teacher_schedule SET quantity = $quantity2 WHERE sched_id=$delete_id";
+                if(mysqli_query($conn, $update_sql)===TRUE){
+                    echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='student.php';</script>";
+                } 
+            }else {
+                echo "Error deleting record: " . $conn->error;
+            }
+        }
+        
+        ?>
+    </div>
+    <div class="container">
+        <h1>Class Schedule</h1>
+    </div>
     </body>
 </html>  

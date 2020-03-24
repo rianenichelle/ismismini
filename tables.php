@@ -1,3 +1,12 @@
+<?php
+    session_start();
+
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "ismis";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -14,7 +23,7 @@
 
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <a class="navbar-brand" href="#">Mini ISMIS.</a>
+            <a class="navbar-brand" href="admin.php">Mini ISMIS.</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -30,14 +39,20 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#">Features</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
-                </li>
+                
                 </ul>
-                <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="text" placeholder="Search">
-                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-                </form>
+                <form method="POST" class="form-inline my-2 my-lg-0">
+            <button class="btn btn-secondary my-2 my-sm-0" type="submit" name="logout">Logout</button>
+            <?php
+                if(isset($_POST['logout'])){
+                    session_start();
+                    session_unset();
+                    session_destroy();
+
+                    header("Location:index.php");
+                }
+            ?>
+            </form>
             </div>
         </nav>
 
@@ -48,12 +63,6 @@
 
     <?php
     //DISPLAY SUBJECTS TABLE
-        session_start();
-
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
-        $dbname = "ismis";
 
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
@@ -97,7 +106,7 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $sql = "SELECT * FROM account WHERE type=2";
+        $sql = "SELECT * FROM account WHERE type='Teacher'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
@@ -136,8 +145,8 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $stud_sql = "SELECT * FROM account WHERE type=1";
-        $result = $conn->query($sql);
+        $stud_sql = "SELECT * FROM account WHERE type='Student'";
+        $result = $conn->query($stud_sql);
 
         if ($result->num_rows > 0) {
             echo '<table class="table table-hover" >';
@@ -173,7 +182,10 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        $sched_sql = "SELECT * FROM teacher_schedule";
+        $sched_sql = "SELECT * FROM teacher_schedule
+                      INNER JOIN account ON teacher_schedule.teacher_id=account.account_id
+                      INNER JOIN subject ON teacher_schedule.subj_id=subject.subj_id 
+                      ";
         $result = $conn->query($sched_sql);
 
         if ($result->num_rows > 0) {
@@ -191,8 +203,8 @@
             while($row = $result->fetch_assoc()) {
                 echo "<tr>";
                 echo "<td>".$row["sched_id"]."</td>";
-                echo "<td>".$row["subj_id"]."</td>";
-                echo "<td>".$row["teacher_id"]."</td>";
+                echo "<td>".$row["description"]."</td>";
+                echo "<td>".$row['fname']." ".$row['lname']."</td>";
                 echo "<td>".$row['date']." ".$row['time_start']." - ".$row['time_end']."</td>";
                 echo "<td>".$row["room"]."</td>";
                 echo "<td>".$row["quantity"]."</td>";
@@ -216,10 +228,6 @@
 
                 <?php
                     //DELETE A SUBJECT.
-                    $servername = "localhost";
-                    $username = "root";
-                    $password = "";
-                    $dbname = "ismis";
 
                     $conn = new mysqli($servername, $username, $password, $dbname);
                     
@@ -228,46 +236,97 @@
                         die("Connection failed: " . $conn->connect_error);
                     }
                     
-                    if (isset($_POST['del_subj'])){
+                    if(isset($_POST['del_subj'])){
                         $id=$_POST["del"];
+                    
+                        $subj_sql = "SELECT subj_id, description, max_stud FROM subject WHERE subj_id=$id";
+                        $result = $conn->query($subj_sql);
+
+                        if ($result->num_rows > 0) {   
+                            // sql to delete a record
+                            if (isset($_POST['del_subj'])){
+                                $id=$_POST["del"];
+                            }
+                            $sql = "DELETE FROM subject WHERE subj_id=$id";
+                            $result = $conn->query($sql);
+                            if ($conn->query($sql) === TRUE) {
+                                echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='tables.php';</script>";
+                            } else {
+                                echo "Error deleting record: " . $conn->error;
+                                }
+                        } else {
+                            echo "No record found!";
+                        }
                     }
                     
-                    $subj_sql = "SELECT * FROM subject WHERE subj_id=$id";
-                    $result = $conn->query($subj_sql);
-
-                    if ($result->num_rows > 0) {   
-                         // sql to delete a record
-                         if (isset($_POST['del_subj'])){
-                            $id=$_POST["del"];
-                        }
-                        $sql = "DELETE FROM subject WHERE subj_id=$id";
-                        $result = $conn->query($sql);
-                        if ($conn->query($sql) === TRUE) {
-                            echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='register.php';</script>";
-                        } else {
-                            echo "Error deleting record: " . $conn->error;
-                            }
-                    } else {
-                        echo "No record found!";
-                    }
-
                     $conn->close();
                 ?>
-
             </div>
-        </div><br>
+        </div>
+
+        <div class="list-group-item flex-column align-items-start col-sm-6">
+        <div class="w-100 justify-content-between">
+            <h2>Remove a schedule.</h2>
+                <form action="tables.php" method="POST">
+                    <label class="col-form-label">Enter ID: </label>
+                    <input type="text" name="delete2" class="form-control form-control-sm col-sm-2"><br>
+                    
+                    <input type="submit" name="del_sched" class="btn btn-primary" value="Delete">
+                </form>
+
+                <?php
+                    //DELETE A SCHEDULE.
+
+                    $conn = new mysqli($servername, $username, $password, $dbname);
+                    
+                    // Check connection
+                    if ($conn->connect_error) {
+                        die("Connection failed: " . $conn->connect_error);
+                    }
+                    
+                    if(isset($_POST['del_sched'])){
+                        $id2=$_POST["delete2"];
+                    
+                        $sched_sql = "SELECT * FROM teacher_schedule WHERE sched_id=$id2";
+                        $result = $conn->query($sched_sql);
+
+                        if ($result->num_rows > 0) {   
+                            // sql to delete a record
+                            if (isset($_POST['del_sched'])){
+                                $id2=$_POST["delete2"];
+                            }
+                            $sql2 = "DELETE FROM teacher_schedule WHERE sched_id=$id2";
+                            $result = $conn->query($sql2);
+                            if ($result === TRUE) {
+                                echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='tables.php';</script>";
+                            } else {
+                                echo "Error deleting record: " . $conn->error;
+                                }
+                        } else {
+                            echo "No record found!";
+                        }
+                    }
+                    
+                    $conn->close();
+                ?>
+            </div>
+        </div>
+        
+        <br><br>
 
         <div class="list-group-item flex-column align-items-start col-sm-6">
             <div class="w-100 justify-content-between">
             <h2>Edit A Class Schedule.</h2>
-                    <form action="update.php" method="get">
+                <form action="update.php" method="GET">
                     <label class="col-form-label">Enter ID: </label>
                     <input type="text" name = "idedit" id = "idedit" class="form-control form-control-sm col-sm-2"><br>
-                    <input type="submit" class="btn btn-primary" value="UPDATE">
+                    <input type="submit" class="btn btn-primary" name="update_sched" value="update">
                 </form>
-                </div>
+            </div>
         </div>
+        
     </div>
+
     <br><br>    
 
     </body>
