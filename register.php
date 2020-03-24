@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    <br><br>
     <div class="box">
         <div class="container">
             <h2>REGISTER</h2>
