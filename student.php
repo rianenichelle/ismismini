@@ -54,15 +54,17 @@
         </nav>
 
     <br><br>
+
     <div class="container">
-    <h1>Student</h1>
-    <br>
+        <h1>Student</h1>
+        <br>
 
     <!--NEW SUBJECT-->
     <div class="list-group-item flex-column align-items-start">
         <div class="d-flex w-100 justify-content-between">
-            <div class="form-group">
+        <div class="form-group">
             <h2 class="text-muted">Enroll in a subject.</h2>
+            
             <form action="student.php" method="POST">
             <?php
             // Create connection
@@ -105,19 +107,19 @@
             }     
             echo "</table>";
             $conn->close();
-        ?>
-        <label style="color: #000">Enter Schedule ID: </label>
-        <input type="text" name = "enroll_id" class="form-control form-control-sm col-sm-2"><br>
-        <input type="submit" class="btn btn-primary" name ="enroll" value="ENROLL">
-    </form>
-    </div>
-    </div>
+            ?>
+            <label style="color: #000">Enter Schedule ID: </label>
+            <input type="text" name = "enroll_id" class="form-control form-control-sm col-sm-2"><br>
+        
+            <input type="submit" class="btn btn-primary" name ="enroll" value="ENROLL">
+            </form>
+        </div>
+        </div>
     </div>
 
     <?php
         if(isset($_POST['enroll'])){
             $enroll_id = $_POST['enroll_id'];
-
             $conn = mysqli_connect($servername, $username, $password,$dbname);
 
             if (!$conn) {
@@ -135,67 +137,65 @@
                     $sql2 = "SELECT * FROM subject WHERE subj_id = '$subj_id' ";//getting contents of SUBJECT database for maximum quantity
                     $query2 = mysqli_query($conn,$sql2);
 
-                        if(mysqli_num_rows($query2) > 0){
-                            while($row2 = mysqli_fetch_array($query2)){ 
-                                if($quantity < $row2['max_stud']){
-                                    $sql3 = "SELECT * FROM student_schedule INNER JOIN teacher_schedule ON student_schedule.sched_id = teacher_schedule.sched_id"; //getting the student schedule whether or not it is empty
-                                    $query3 = mysqli_query($conn,$sql3);
-                                    $res = 0;
+                    if(mysqli_num_rows($query2) > 0){
+                        while($row2 = mysqli_fetch_array($query2)){ 
+                            if($quantity < $row2['max_stud']){
+                                $sql3 = "SELECT * FROM student_schedule INNER JOIN teacher_schedule ON student_schedule.sched_id = teacher_schedule.sched_id"; //getting the student schedule whether or not it is empty
+                                $query3 = mysqli_query($conn,$sql3);
+                                $res = 0;
 
-                                    if(mysqli_num_rows($query3)>0){
-                                        while($row3 = mysqli_fetch_array($query3) && $res != 1 ){
-                                            if($row['time_start'] > $row3['time_end']){
-                                                    $enroll_sql = "INSERT INTO student_schedule(stud_id, sched_id, account_id) VALUES('','$enroll_id','$account_id')";                                                        
-                                                    $quantity = $quantity + 1;
-                                                    if (mysqli_query($conn,$enroll_sql) === TRUE) {
-                                                        echo "Successfully Enrolled in a Subject";
-                                                            
-                                                        $update_sql = "UPDATE teacher_schedule SET quantity = '$quantity' WHERE sched_id = '$enroll_id'";
-                                                        $update = mysqli_query($conn,$update_sql);
-                                                        header("Location:student.php");
-                                                        $res = 1;
-                                                    }else {
-                                                        $res = 0;
-                                                        echo "Error: " . $subj_sql . "<br>" .  mysqli_error($conn);
-                                                    }
-                                                }
-                                                break;
-                                        }
-                                    }else{
-                                        $enroll_sql = "INSERT INTO student_schedule (stud_id,sched_id,account_id) 
-                                                       VALUES('','$enroll_id','$account_id')";
-                                        
-                                        $quantity = $quantity + 1;
-
-                                        if (mysqli_query($conn,$enroll_sql) === TRUE ) {
-                                            echo "Successfully Enrolled in a Subject";
+                                if(mysqli_num_rows($query3)>0){
+                                    while($row3 = mysqli_fetch_array($query3) && $res != 1 ){
+                                        if($row['time_start'] > $row3['time_end']){
+                                            $enroll_sql = "INSERT INTO student_schedule(stud_id, sched_id, account_id) VALUES('','$enroll_id','$account_id')";                                                        
+                                            $quantity = $quantity + 1;
                                             
-                                            $update_sql = "UPDATE teacher_schedule SET quantity = $quantity WHERE sched_id = $enroll_id";
-                                            $update = mysqli_query($conn,$update_sql);
-                                            header("Location:student.php");
-
-                                        }else {
-                                            echo "Error: " . $enroll_sql . "<br>" .  mysqli_error($conn);
+                                            if (mysqli_query($conn,$enroll_sql) === TRUE) {
+                                                 echo "Successfully Enrolled in a Subject";
+                                                            
+                                                $update_sql = "UPDATE teacher_schedule SET quantity = '$quantity' WHERE sched_id = '$enroll_id'";
+                                                $update = mysqli_query($conn,$update_sql);
+                                                header("Location:student.php");
+                                                $res = 1;
+                                            } else {
+                                                $res = 0;
+                                                echo "Error: " . $subj_sql . "<br>" .  mysqli_error($conn);
+                                            }
                                         }
+                                        break;
+                                    }
+                                }else{
+                                    $enroll_sql = "INSERT INTO student_schedule (stud_id,sched_id,account_id) 
+                                                   VALUES('','$enroll_id','$account_id')";
+                                        
+                                    $quantity = $quantity + 1;
+
+                                    if (mysqli_query($conn,$enroll_sql) === TRUE ) {
+                                        echo "Successfully Enrolled in a Subject";
+                                            
+                                        $update_sql = "UPDATE teacher_schedule SET quantity = $quantity WHERE sched_id = $enroll_id";
+                                        $update = mysqli_query($conn,$update_sql);
+                                        header("Location:student.php");
+
+                                    } else {
+                                        echo "Error: " . $enroll_sql . "<br>" .  mysqli_error($conn);
                                     }
                                 }
                             }
-                        }else{
-                            echo "<h3>NOT ENROLLED IN ANY SCHEDULE</h3>";
                         }
+                    } else {
+                        echo "<h3>NOT ENROLLED IN ANY SCHEDULE</h3>";
+                    }
                 }
             }
-           $conn->close();
         }
-
+        $conn->close();
     ?>
 
     <br><br>
-
     
     <?php
         $conn = mysqli_connect($servername, $username, $password,$dbname);
-
         if (!$conn) {
             die("Connection failed: " . mysqli_connect_error());
         }
