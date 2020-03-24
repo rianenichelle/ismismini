@@ -272,7 +272,7 @@
 
             $del_sql = "DELETE FROM student_schedule WHERE sched_id = '$delete_id'";
             if (mysqli_query($conn,$del_sql) === TRUE) {
-                $update_sql = "UPDATE teacher_schedule SET quantity = $quantity2 WHERE sched_id=$delete_id";
+                $update_sql = "UPDATE teacher_schedule SET quantity = quantity-1 WHERE sched_id=$delete_id";
                 if(mysqli_query($conn, $update_sql)===TRUE){
                     echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='student.php';</script>";
                 } 
