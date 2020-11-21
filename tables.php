@@ -1,8 +1,6 @@
 <?php
     session_start();
-    if($_SESSION['account_id']==0){
-        header("Location:index.php");
-    }
+
     $servername = "localhost";
     $username = "root";
     $password = "";
@@ -59,7 +57,7 @@
         </nav>
 
         <br><br>
-
+<form action="tables.php" method="post">
     <div class="container">
     <h2>Subjects</h2>
 
@@ -90,12 +88,48 @@
                 echo "<td>".$row["subj_id"]."</td>";
                 echo "<td>".$row["description"]."</td>";
                 echo "<td>".$row["max_stud"]."</td>";
+                echo "<td> <button class='btn btn-primary' value='".$row["subj_id"]."' name='subj_id'>DELETE</button></td>";
                 echo "</tr>";
             }
         }
         echo "</table>";
         $conn->close();
     ?>
+                    <?php
+                    //DELETE A SUBJECT.
+
+                    $conn = new mysqli($servername, $username, $password, $dbname);
+                    
+                    // Check connection
+                    if ($conn->connect_error) {
+                        die("Connection failed: " . $conn->connect_error);
+                    }
+                    
+                    if(isset($_POST['subj_id'])){
+                        $id=$_POST["subj_id"];
+                    
+                        $subj_sql = "SELECT  FROM subject INNER JOIN teacher_schedule ON subject.subj_id = teacher_schedule.subj_id WHERE quantity=0 AND subj_id=$id";
+                        $result = $conn->query($subj_sql);
+
+                        if ($result->num_rows > 0) {   
+                            // sql to delete a record
+                            if (isset($_POST['subj_id'])){
+                                $id=$_POST["subj_id"];
+                            }
+                            $sql = "DELETE FROM subject WHERE subj_id=$id";
+                            $result = $conn->query($sql);
+                            if ($conn->query($sql) === TRUE) {
+                                echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='tables.php';</script>";
+                            } else {
+                                echo "Error deleting record: " . $conn->error;
+                                }
+                        } else {
+                            echo "No record found! or Cannot delete schedule if there are people enrolled";
+                        }
+                    }
+                    
+                    $conn->close();
+                ?>
 
     <h2>Faculty</h2>
 
@@ -210,72 +244,15 @@
                 echo "<td>".$row['date']." ".$row['time_start']." - ".$row['time_end']."</td>";
                 echo "<td>".$row["room"]."</td>";
                 echo "<td>".$row["quantity"]."</td>";
+                echo "<td> <button class='btn btn-primary' value='".$row["sched_id"]."' name='sched_id'>DELETE</button></td>";
                 echo "</tr>";
             }
         }
         echo "</table>";
         $conn->close();
     ?>
-
-    <div class="row">
-        <div class="list-group-item flex-column align-items-start col-sm-6">
-        <div class="w-100 justify-content-between">
-            <h2>Remove a subject.</h2>
-                <form action="tables.php" method="POST">
-                    <label class="col-form-label">Enter ID: </label>
-                    <input type="text" name="del" class="form-control form-control-sm col-sm-2"><br>
-                    
-                    <input type="submit" name="del_subj" class="btn btn-primary" value="Delete">
-                </form>
-
-                <?php
-                    //DELETE A SUBJECT.
-
-                    $conn = new mysqli($servername, $username, $password, $dbname);
-                    
-                    // Check connection
-                    if ($conn->connect_error) {
-                        die("Connection failed: " . $conn->connect_error);
-                    }
-                    
-                    if(isset($_POST['del_subj'])){
-                        $id=$_POST["del"];
-                    
-                        $subj_sql = "SELECT subj_id, description, max_stud FROM subject WHERE subj_id=$id";
-                        $result = $conn->query($subj_sql);
-
-                        if ($result->num_rows > 0) {   
-                            // sql to delete a record
-                            if (isset($_POST['del_subj'])){
-                                $id=$_POST["del"];
-                            }
-                            $sql = "DELETE FROM subject WHERE subj_id=$id";
-                            $result = $conn->query($sql);
-                            if ($conn->query($sql) === TRUE) {
-                                echo "<script language='javascript'>alert('Information Successfully Deleted!');window.location.href='tables.php';</script>";
-                            } else {
-                                echo "Error deleting record: " . $conn->error;
-                                }
-                        } else {
-                            echo "No record found!";
-                        }
-                    }
-                    
-                    $conn->close();
-                ?>
-            </div>
-        </div>
-
-        <div class="list-group-item flex-column align-items-start col-sm-6">
-        <div class="w-100 justify-content-between">
-            <h2>Remove a schedule.</h2>
-                <form action="tables.php" method="POST">
-                    <label class="col-form-label">Enter ID: </label>
-                    <input type="text" name="delete2" class="form-control form-control-sm col-sm-2"><br>
-                    
-                    <input type="submit" name="del_sched" class="btn btn-primary" value="Delete">
-                </form>
-
+</form>
+  
                 <?php
                     //DELETE A SCHEDULE.
 
@@ -286,16 +263,16 @@
                         die("Connection failed: " . $conn->connect_error);
                     }
                     
-                    if(isset($_POST['del_sched'])){
-                        $id2=$_POST["delete2"];
+                    if(isset($_POST['sched_id'])){
+                        $id2=$_POST["sched_id"];
                     
-                        $sched_sql = "SELECT * FROM teacher_schedule WHERE sched_id=$id2";
+                        $sched_sql = "SELECT * FROM teacher_schedule JOIN WHERE sched_id=$id2";
                         $result = $conn->query($sched_sql);
 
                         if ($result->num_rows > 0) {   
                             // sql to delete a record
-                            if (isset($_POST['del_sched'])){
-                                $id2=$_POST["delete2"];
+                            if (isset($_POST['sched_id'])){
+                                $id2=$_POST["sched_id"];
                             }
                             $sql2 = "DELETE FROM teacher_schedule WHERE sched_id=$id2";
                             $result = $conn->query($sql2);
@@ -305,14 +282,12 @@
                                 echo "Error deleting record: " . $conn->error;
                                 }
                         } else {
-                            echo "No record found!";
+                            echo "No record found! or Cannot delete schedule if there are people enrolled";
                         }
                     }
                     
                     $conn->close();
                 ?>
-            </div>
-        </div>
         
         <br><br>
 
