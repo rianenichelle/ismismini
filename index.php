@@ -1,3 +1,7 @@
+<?php
+	session_start();
+	include 'connect.php';
+<?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,8 +68,6 @@
 		</form>
 	</div>
 	<?php
-	   session_start();
-	   include 'connect.php';
 	   
 	   if(isset($_POST['login'])){
 		   $email = $_POST['email'];
