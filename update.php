@@ -1,12 +1,9 @@
 <?php
     session_start();
+    include 'connect.php';
     if($_SESSION['account_id']==0){
         header("Location:index.php");
     }
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "ismis";
     
     $_SESSION['id']=$_GET['idedit'];
 ?>

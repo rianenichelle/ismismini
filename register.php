@@ -1,9 +1,14 @@
+<?php 
+    session_start();
+    include 'connect.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Register</title>
     <link rel="stylesheet" type="text/css" href="lux.css">
 </head>
 
@@ -46,12 +51,6 @@
     </div>
 
     <?php
-        session_start();
-        
-        $servername = "localhost";
-        $username="root";
-        $password="";
-        $dbname="ismis";
 
         if(isset($_POST['submit'])){
             $fname=$_POST['fname'];

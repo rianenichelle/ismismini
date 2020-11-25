@@ -65,12 +65,14 @@
 	</div>
 	<?php
 	   session_start();
+	   include 'connect.php';
 	   
 	   if(isset($_POST['login'])){
 		   $email = $_POST['email'];
 		   $password = $_POST['password'];
+
 		
-		   $conn = new mysqli("localhost","root","","ismis");
+		   $conn = new mysqli($servername,$username,$password,$dbname);
            
 	       if($conn->connect_error) {
               die("Connection failed: " . $conn->connect_error);

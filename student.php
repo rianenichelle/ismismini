@@ -1,14 +1,13 @@
-<?php
+<?php 
     session_start();
     if($_SESSION['account_id']==0){
         header("Location:index.php");
     }
-    $servername = "localhost";
-    $username="root";
-    $password="";
-    $dbname="ismis";
     $account_id = $_SESSION['account_id'];
+    include 'connect.php';
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">

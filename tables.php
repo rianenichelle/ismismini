@@ -1,10 +1,6 @@
-<?php
+<?php 
     session_start();
-
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "ismis";
+    include 'connect.php';
 ?>
 
 <!DOCTYPE html>
