@@ -74,7 +74,7 @@
 		   $password = $_POST['password'];
 
 		
-		   $conn = new mysqli("sql12.freemysqlhosting.net", "sql12379133", "uv4SliTfGV", "sql12379133");
+		   $conn = new mysqli("sql12.freemysqlhosting.net", "sql12381956", "cdkP1LyzNw", "sql12381956");
            
 	       if($conn->connect_error) {
               die("Connection failed: " . $conn->connect_error);
